@@ -1,0 +1,2 @@
+event=video/brightnessup
+action=/usr/bin/brightness up

@@ -1,0 +1,48 @@
+# -*- mode: sh; -*-
+
+calc() {
+    echo "$1" | bc | cut -d. -f1 ;
+}
+
+read -r max_br < /sys/class/backlight/intel_backlight/max_brightness
+
+## These are var to fiddle with brightness stepping:
+# step_f stepping (factor part)
+# step_c stepping (constant part)
+step_f="1.25"
+step_c=$(calc "$max_br / 200")
+
+## hi_cut and lo_cut guarantee writes to brightness stay in the legal range
+hi_cut=$(calc "$max_br / $step_f - $step_c")
+lo_cut=$(calc "$step_c * $step_f")
+
+sys_bl="/sys/class/backlight/intel_backlight/brightness"
+read -r cur < $sys_bl
+
+case "$1" in
+    up)
+        if [ "$cur" -gt "$hi_cut" ]; then
+            echo "$max_br" > $sys_bl
+        elif [ "$cur" -lt "$lo_cut" ]; then
+            echo "$lo_cut" > $sys_bl
+        else	calc "$cur * $step_f + $step_c" > $sys_bl
+        fi
+        ;;
+    down)
+        if [ "$cur" -le "$lo_cut" ]; then
+            echo 0 > $sys_bl
+        else	calc "$cur / $step_f - $step_c" > $sys_bl
+        fi
+        ;;
+    max)
+        echo "$max_br" > $sys_bl
+        ;;
+    min)
+        echo 1 > $sys_bl
+        ;;
+    off)
+        echo 0 > $sys_bl
+        ;;
+    *)
+        echo "Unrecognized brightness command: $1" >&2
+esac
