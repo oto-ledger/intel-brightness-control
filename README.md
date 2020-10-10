@@ -15,5 +15,5 @@ The `brightness` script supports the following subcommands:
 
 The handled events are
 
-- `button/brightnessup`
-- `button/brightnessdown`
+- `video/brightnessup`
+- `video/brightnessdown`
